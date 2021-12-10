@@ -15,11 +15,14 @@ export class UsersRepository implements IUsersRepository {
   async findUserWithGamesById({
     user_id,
   }: IFindUserWithGamesDTO): Promise<User> {
-    return this.repository
+    const users = await this.repository
       .createQueryBuilder("users")
       .innerJoinAndSelect("users.games", "games")
       .where("users.id = :id", { id: user_id })
+      .andWhere("user.games != null")
       .getOneOrFail();
+
+    return users;
   }
 
   async findAllUsersOrderedByFirstName(): Promise<User[]> {
@@ -31,7 +34,7 @@ export class UsersRepository implements IUsersRepository {
     last_name,
   }: IFindUserByFullNameDTO): Promise<User[] | undefined> {
     return this.repository.query(
-      "select users.first_name, users.last_name from users where users.first_name = @0 and users.last_name = @1",
+      "select * from users where (lower(users.first_name) = lower($1)) and (lower(users.last_name) = lower($2))",
       [first_name, last_name]
     );
   }
