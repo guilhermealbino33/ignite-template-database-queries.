@@ -1,4 +1,3 @@
-import { userInfo } from "os";
 import { getRepository, Repository } from "typeorm";
 
 import { IFindUserWithGamesDTO, IFindUserByFullNameDTO } from "../../dtos";
@@ -15,14 +14,9 @@ export class UsersRepository implements IUsersRepository {
   async findUserWithGamesById({
     user_id,
   }: IFindUserWithGamesDTO): Promise<User> {
-    const users = await this.repository
-      .createQueryBuilder("users")
-      .innerJoinAndSelect("users.games", "games")
-      .where("users.id = :id", { id: user_id })
-      .andWhere("user.games != null")
-      .getOneOrFail();
-
-    return users;
+    return this.repository.findOneOrFail(user_id, {
+      relations: ["games"],
+    });
   }
 
   async findAllUsersOrderedByFirstName(): Promise<User[]> {
